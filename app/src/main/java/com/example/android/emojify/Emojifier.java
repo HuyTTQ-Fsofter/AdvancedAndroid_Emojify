@@ -26,9 +26,11 @@ import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
 
+import static android.util.Config.LOGD;
+
 class Emojifier {
 
-    private static final String LOG_TAG = Emojifier.class.getSimpleName();
+    private static final String TAG = Emojifier.class.getSimpleName();
 
     /**
      * Method for detecting faces in a bitmap.
@@ -51,18 +53,33 @@ class Emojifier {
         SparseArray<Face> faces = detector.detect(frame);
 
         // Log the number of faces
-        Log.d(LOG_TAG, "detectFaces: number of faces = " + faces.size());
+        Log.d(TAG, "detectFaces: number of faces = " + faces.size());
 
         // If there are no faces detected, show a Toast message
-        if(faces.size() == 0){
+        if (faces.size() == 0) {
             Toast.makeText(context, R.string.no_faces_message, Toast.LENGTH_SHORT).show();
+        } else {
+            // TODO (2): Iterate through the faces, calling getClassifications() for each face.
+            for (int i = 0; i < faces.size(); i++) {
+                Face face = faces.valueAt(i);
+
+                Log.d(TAG, "getClassifications: ------------------" + i);
+                getClassifications(face);
+            }
         }
 
-        // TODO (2): Iterate through the faces, calling getClassifications() for each face.
 
         // Release the detector
         detector.release();
     }
 
-    // TODO (1): Create a static method called getClassifications() which logs the probability of each eye being open and that the person is smiling.
+    // TODO (1): Create a static method called getClassifications() which logs the probability
+    // of each eye being open and that the person is smiling.
+    public static void getClassifications(Face face) {
+        // Log all probabilities
+        Log.d(TAG, "getClassifications: face.getIsSmilingProbability()" + face.getIsSmilingProbability());
+        Log.d(TAG, "getClassifications: face.getIsLeftEyeOpenProbability()" + face.getIsLeftEyeOpenProbability());
+        Log.d(TAG, "getClassifications: face.getIsRightEyeOpenProbability()" + face.getIsRightEyeOpenProbability());
+    }
+
 }
