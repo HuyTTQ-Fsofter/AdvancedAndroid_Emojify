@@ -30,6 +30,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -42,6 +43,7 @@ import java.io.IOException;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,14 +53,20 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String FILE_PROVIDER_AUTHORITY = "com.example.android.fileprovider";
 
-    @BindView(R.id.image_view) ImageView mImageView;
+    @BindView(R.id.image_view)
+    ImageView mImageView;
 
-    @BindView(R.id.emojify_button) Button mEmojifyButton;
-    @BindView(R.id.share_button) FloatingActionButton mShareFab;
-    @BindView(R.id.save_button) FloatingActionButton mSaveFab;
-    @BindView(R.id.clear_button) FloatingActionButton mClearFab;
+    @BindView(R.id.emojify_button)
+    Button mEmojifyButton;
+    @BindView(R.id.share_button)
+    FloatingActionButton mShareFab;
+    @BindView(R.id.save_button)
+    FloatingActionButton mSaveFab;
+    @BindView(R.id.clear_button)
+    FloatingActionButton mClearFab;
 
-    @BindView(R.id.title_text_view) TextView mTitleTextView;
+    @BindView(R.id.title_text_view)
+    TextView mTitleTextView;
 
     private String mTempPhotoPath;
 
@@ -74,6 +82,30 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         // TODO (2): Set up Timber
+        if (BuildConfig.DEBUG) {
+            Timber.plant(new Timber.DebugTree());
+        } else {
+            Timber.plant(new CrashReportingTree());
+        }
+    }
+
+    /** A tree which logs important information for crash reporting. */
+    private static class CrashReportingTree extends Timber.Tree {
+        @Override protected void log(int priority, String tag, String message, Throwable t) {
+            if (priority == Log.VERBOSE || priority == Log.DEBUG) {
+                return;
+            }
+
+            FakeCrashLibrary.log(priority, tag, message);
+
+            if (t != null) {
+                if (priority == Log.ERROR) {
+                    FakeCrashLibrary.logError(t);
+                } else if (priority == Log.WARN) {
+                    FakeCrashLibrary.logWarning(t);
+                }
+            }
+        }
     }
 
     /**
@@ -98,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-            @NonNull int[] grantResults) {
+                                           @NonNull int[] grantResults) {
         // Called when you request permission to read and write to external storage
         switch (requestCode) {
             case REQUEST_STORAGE_PERMISSION: {
@@ -181,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Resample the saved image to fit the ImageView
         mResultsBitmap = BitmapUtils.resamplePic(this, mTempPhotoPath);
-        
+
 
         // Detect the faces and overlay the appropriate emoji
         mResultsBitmap = Emojifier.detectFacesandOverlayEmoji(this, mResultsBitmap);
@@ -189,7 +221,6 @@ public class MainActivity extends AppCompatActivity {
         // Set the new bitmap to the ImageView
         mImageView.setImageBitmap(mResultsBitmap);
     }
-
 
 
     /**
